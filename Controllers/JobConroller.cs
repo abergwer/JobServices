@@ -41,17 +41,25 @@ namespace JobServices.Controllers
         }
 
         [HttpPut("ResumeJob")]
-        public Task<IActionResult> ResumeJob([FromQuery] string jobId)
+        public async Task<IActionResult> ResumeJob([FromQuery] string jobName)
         {
-            // Here you would add logic to resume the job with the given ID.
-            return Task.FromResult<IActionResult>(Ok(new { message = $"Job {jobId} resumed successfully." }));
+            var result = await _jobService.ResumeJob(jobName);
+            if (!result)
+            {
+                return NotFound(new { message = $"Job {jobName} not found." });
+            }
+            return Ok(new { message = $"Job {jobName} resumed successfully." });
         }
 
         [HttpPut("PauseJob")]
-        public Task<IActionResult> PauseJob([FromQuery] string jobId)
+        public async Task<IActionResult> PauseJob([FromQuery] string jobName)
         {
-            // Here you would add logic to pause the job with the given ID.
-            return Task.FromResult<IActionResult>(Ok(new { message = $"Job {jobId} paused successfully." }));
+            var result = await _jobService.StopJob(jobName);
+            if (!result)
+            {
+                return NotFound(new { message = $"Job {jobName} not found." });
+            }
+            return Ok(new { message = $"Job {jobName} paused successfully." });
         }
 
         [HttpDelete("DeleteJob")]

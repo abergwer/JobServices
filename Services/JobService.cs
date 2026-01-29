@@ -46,14 +46,26 @@ namespace JobServices.Services
             return Task.FromResult(Jobs.AsEnumerable());
         }
 
-        public Task<bool> ResumeJob(string jobId)
+        public Task<bool> ResumeJob(string jobName)
         {
-            throw new NotImplementedException();
+            int index = Jobs.FindIndex(job => job.Name == jobName);
+            if (index != -1)
+            {
+                Jobs[index].Status = "Active";
+                return Task.FromResult(true);
+            }
+            return Task.FromResult(false);
         }
 
-        public Task<bool> StopJob(string jobId)
+        public Task<bool> StopJob(string jobName)
         {
-            throw new NotImplementedException();
+            int index = Jobs.FindIndex(job => job.Name == jobName);
+            if (index != -1)
+            {
+                Jobs[index].Status = "Paused";
+                return Task.FromResult(true);
+            }
+            return Task.FromResult(false);
         }
     }
 }
