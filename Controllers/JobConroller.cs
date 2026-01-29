@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using JobServices.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobServices.Controllers
@@ -20,14 +21,4 @@ namespace JobServices.Controllers
             return Task.FromResult<IActionResult>(Ok(new { message = "Job created successfully.", job }));
         }
     }
-
-    public class CreateJobRequest
-    {
-        public string Name { get; set; }
-        public string Type { get; set; }
-        public string Payload { get; set; }
-        public string Schedule { get; set; }
-    }
-
-
 }
