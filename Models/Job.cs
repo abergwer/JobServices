@@ -8,5 +8,6 @@
         public required string Payload { get; set; }
         public required string Schedule { get; set; }
         public required string Status { get; set; }
+        public required DateTime nextRun { get; set; } 
     }
 }

@@ -12,17 +12,26 @@ namespace JobServices.Services
 
         public Task<Job> CreateJob(CreateJobRequest createJob)
         {
-            Job newJob = new Job
+            int secondsTimer;
+            if (int.TryParse(createJob.Schedule, out secondsTimer))
             {
-                Id = Guid.NewGuid(),
-                Name = createJob.Name,
-                Type = createJob.Type,
-                Payload = createJob.Payload,
-                Schedule = createJob.Schedule,
-                Status = "Active"
-            };
-            Jobs.Add(newJob);
-            return Task.FromResult(newJob);
+                Job newJob = new Job
+                {
+                    Id = Guid.NewGuid(),
+                    Name = createJob.Name,
+                    Type = createJob.Type,
+                    Payload = createJob.Payload,
+                    Schedule = createJob.Schedule,
+                    Status = "Active",
+                    nextRun = DateTime.Now.AddSeconds(secondsTimer)
+                };
+                Jobs.Add(newJob);
+                return Task.FromResult(newJob);
+            }
+            else
+            {
+                return Task.FromException<Job>(new Exception("Schedule must be number of seconds"));
+            }
         }
 
         public Task<bool> DeleteJob(string jobName)
