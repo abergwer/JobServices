@@ -1,8 +1,13 @@
-﻿namespace JobServices.Models
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
+namespace JobServices.Models
 {
     public class Job
     {
-        public Guid Id { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
+        public string Id { get; set; }
         public required string Name { get; set; }
         public required string Type { get; set; }
         public required string Payload { get; set; }
