@@ -3,15 +3,23 @@ using JobServices.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 builder.Services.AddSingleton<MongoDbContext>();
 builder.Services.AddSingleton<JobService>();
 builder.Services.AddSingleton<JobServices.Services.IJobService, JobServices.Services.JobService>();
 builder.Services.AddHostedService<JobServices.Services.JobSchedulerService>();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Configure port from arguments
+var port = 5001; // default port
+var portArg = args.FirstOrDefault(arg => arg.StartsWith("--port="));
+if (portArg != null && int.TryParse(portArg.Substring("--port=".Length), out var parsedPort))
+{
+    port = parsedPort;
+}
+
+builder.WebHost.UseUrls($"https://localhost:{port}");
 
 var app = builder.Build();
 

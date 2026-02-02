@@ -79,18 +79,44 @@ namespace JobServices.Services
 
         public async Task UpdateJob(string id, Job job)
         {
-            int secondsTimer;
             try
             {
-                int.TryParse(job.Schedule, out secondsTimer);
                 var filter = Builders<Job>.Filter.Eq(j => j.Id, id);
-                var update = Builders<Job>.Update.Set(job => job.nextRun, DateTime.Now.ToUniversalTime().AddSeconds(secondsTimer));
+                var update = Builders<Job>.Update
+                    .Set(j => j.nextRun, DateTime.Now.ToUniversalTime().AddSeconds(secondsTimer))
+                    .Set(j => j.Status, "Active");
+
                 await _jobs.UpdateOneAsync(filter, update);
             }
-            catch(Exception)
+            catch (ArgumentException)
             {
-                throw new Exception("Failed to update job in database");
+                throw;
             }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to update job in database", ex);
+            }
+        }
+
+        /// <summary>
+        /// Atomically updates a job status from "Active" to "Running".
+        /// </summary>
+        /// <param name="job">The job to update.</param>
+        /// <returns>The updated job document, or null if the job was not found or not in Active status.</returns>
+        public async Task<Job> AtomicOperation(Job job)
+        {
+            var filter = Builders<Job>.Filter.And(
+                Builders<Job>.Filter.Eq(j => j.Id, job.Id),
+                Builders<Job>.Filter.Eq(j => j.Status, "Active")
+            );
+
+            var update = Builders<Job>.Update.Set(j => j.Status, "Running");
+
+            var options = new FindOneAndUpdateOptions<Job> { ReturnDocument = ReturnDocument.After };
+
+            var updatedJob = await _jobs.FindOneAndUpdateAsync(filter, update, options);
+
+            return updatedJob;
         }
     }
 }

@@ -11,5 +11,6 @@ namespace JobServices.Services
         Task<bool> ResumeJob(string jobName);
         Task<bool> DeleteJob(string jobName);
         Task UpdateJob(string jobId, Job updatedJob);
+        Task<Job> AtomicOperation(Job job);
     }
 }
