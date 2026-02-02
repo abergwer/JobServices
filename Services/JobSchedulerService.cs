@@ -33,13 +33,13 @@ namespace JobServices.Services
                     }
                     else if (job.nextRun <= now && await _jobService.AtomicOperation(job) != null)
                     {
-                        Console.WriteLine($"Executing Job: {job.Name} at {now}");
+                        Console.WriteLine($"Executing Job: {job.Name} at {now.ToLocalTime()}");
                         await LogExecutionAsync(job, "Completed");
                         await _jobService.UpdateJob(job.Id, job);
                     }
                     else
                     {
-                        Console.WriteLine($"Job {job.Name} is scheduled to run at {job.nextRun}, current time is {now}.");
+                        Console.WriteLine($"Job {job.Name} is scheduled to run at {job.nextRun.ToLocalTime()}, current time is {now.ToLocalTime()}.");
                     }
                 }
                 await Task.Delay(1000*secondsTimer, stoppingToken); // Check every second
