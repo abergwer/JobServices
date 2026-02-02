@@ -12,6 +12,12 @@ namespace JobServices.Services
         {
             _jobs = mongoDbContext.GetCollection<Job>("Jobs");
         }
+
+        // Constructor overload to accept a collection directly (useful for testing)
+        public JobService(IMongoCollection<Job> jobsCollection)
+        {
+            _jobs = jobsCollection;
+        }
         public void CheckJobStatus(Guid jobId)
         {
             throw new NotImplementedException();
