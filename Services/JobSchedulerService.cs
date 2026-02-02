@@ -1,40 +1,65 @@
 ﻿using JobServices.Models;
+using MongoDB.Driver;
 
 namespace JobServices.Services
 {
     public class JobSchedulerService : BackgroundService
     {
-        private readonly ILogger<JobSchedulerService> _logger;
         private readonly IJobService _jobService;
-        public JobSchedulerService(ILogger<JobSchedulerService> logger, JobService jobService)
+        private readonly IMongoCollection<JobExecution> _executions;
+
+        private readonly string _instanceId;
+        public JobSchedulerService(MongoDbContext mongoDbContext, JobService jobService)
         {
-            _logger = logger;
             _jobService = jobService;
+            _executions = mongoDbContext.GetCollection<JobExecution>("JobExecutions");
+
+            _instanceId = Guid.NewGuid().ToString();
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Job Scheduler Service is starting.");
+            int secondsTimer = 5;
+            Console.WriteLine("Job Scheduler Service is starting.");
             while (!stoppingToken.IsCancellationRequested)
             {
                 var jobs = await _jobService.GetAllJobs();
                 var now = DateTime.Now.ToUniversalTime();
                 foreach (var job in jobs.Where(job => job.Status == "Active"))
                 {
-                    if (job.nextRun <= now && await _jobService.AtomicOperation(job) != null)
+                    if (job.Payload.Contains("failed"))
                     {
-                        _logger.LogInformation($"Executing job: {job.Name} of type {job.Type} with payload: {job.Payload}");
-                        Console.WriteLine($"Executing job: {job.Name} of type {job.Type} with payload: {job.Payload}");
+                        await LogExecutionAsync(job, "Failed", "Simulated failure due to 'fail' in payload.");
+                        await _jobService.UpdateJob(job.Id, job);
+                    }
+                    else if (job.nextRun <= now && await _jobService.AtomicOperation(job) != null)
+                    {
+                        await LogExecutionAsync(job, "Completed");
                         await _jobService.UpdateJob(job.Id, job);
                     }
                     else
                     {
-                        _logger.LogInformation($"Job {job.Name} is scheduled to run at {job.nextRun}, current time is {now}.");
                         Console.WriteLine($"Job {job.Name} is scheduled to run at {job.nextRun}, current time is {now}.");
                     }
                 }
-                await Task.Delay(1000*3, stoppingToken); // Check every second
+                await Task.Delay(1000*secondsTimer, stoppingToken); // Check every second
             }
-            _logger.LogInformation("Job Scheduler Service is stopping.");
+            Console.WriteLine("Job Scheduler Service is stopping.");
+        }
+
+        public async Task LogExecutionAsync(Job job, string status, string? errorMessage = null)
+        {
+            var execution = new JobExecution
+            {
+                JobName = job.Name,
+                JobType = job.Type,
+                Payload = job.Payload,
+                ExecutedAt = DateTime.Now.ToLocalTime(),
+                InstanceId = _instanceId,
+                Status = status,
+                ErrorMessage = errorMessage
+            };
+
+            await _executions.InsertOneAsync(execution);
         }
     }
 }

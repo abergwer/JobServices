@@ -81,6 +81,7 @@ namespace JobServices.Services
         {
             try
             {
+                int.TryParse(job.Schedule, out int secondsTimer);
                 var filter = Builders<Job>.Filter.Eq(j => j.Id, id);
                 var update = Builders<Job>.Update
                     .Set(j => j.nextRun, DateTime.Now.ToUniversalTime().AddSeconds(secondsTimer))
