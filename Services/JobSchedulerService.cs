@@ -33,6 +33,7 @@ namespace JobServices.Services
                     }
                     else if (job.nextRun <= now && await _jobService.AtomicOperation(job) != null)
                     {
+                        Console.WriteLine($"Executing Job: {job.Name} at {now}");
                         await LogExecutionAsync(job, "Completed");
                         await _jobService.UpdateJob(job.Id, job);
                     }
