@@ -10,5 +10,6 @@ namespace JobServices.Services
         Task<bool> StopJob(string jobName);
         Task<bool> ResumeJob(string jobName);
         Task<bool> DeleteJob(string jobName);
+        Task UpdateJob(string jobId, Job updatedJob);
     }
 }

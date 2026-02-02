@@ -1,11 +1,12 @@
 ﻿using JobServices.Models;
 using MongoDB.Driver;
+using System.Linq.Expressions;
 
 namespace JobServices.Services
 {
     public class JobService : IJobService
     {
-        private readonly IMongoCollection<Job> _jobs;
+        public readonly IMongoCollection<Job> _jobs;
 
         public JobService(MongoDbContext mongoDbContext)
         {
@@ -29,7 +30,7 @@ namespace JobServices.Services
                     Payload = createJob.Payload,
                     Schedule = createJob.Schedule,
                     Status = "Active",
-                    nextRun = DateTime.Now.AddSeconds(secondsTimer)
+                    nextRun = DateTime.Now.ToUniversalTime().AddSeconds(secondsTimer)
                 };
                 try
                 {
@@ -74,6 +75,22 @@ namespace JobServices.Services
 
             var result = await _jobs.FindOneAndUpdateAsync(filter, update);
             return result != null;
+        }
+
+        public async Task UpdateJob(string id, Job job)
+        {
+            int secondsTimer;
+            try
+            {
+                int.TryParse(job.Schedule, out secondsTimer);
+                var filter = Builders<Job>.Filter.Eq(j => j.Id, id);
+                var update = Builders<Job>.Update.Set(job => job.nextRun, DateTime.Now.ToUniversalTime().AddSeconds(secondsTimer));
+                await _jobs.UpdateOneAsync(filter, update);
+            }
+            catch(Exception)
+            {
+                throw new Exception("Failed to update job in database");
+            }
         }
     }
 }
